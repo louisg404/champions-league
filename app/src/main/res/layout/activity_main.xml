@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:clipToPadding="false">
+
+    <ListView
+    android:id="@+id/stationsListView"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:divider="@android:color/transparent"/>
+
+    <ImageView
+        android:layout_alignTop="@id/stationsListView"
+        android:layout_alignEnd="@id/stationsListView"
+        android:layout_width="120dp"
+        android:layout_height="75dp"
+        android:src="@drawable/clogo"
+        android:layout_marginTop="20dp"/>
+
+    <ToggleButton
+        android:id="@+id/toggleButton"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_alignBottom="@id/stationsListView"
+        android:layout_alignEnd="@id/stationsListView"
+        android:textOff="Prochains matchs"
+        android:textOn="Matchs terminés"
+        android:background="#ffffff"/>
+
+
+</RelativeLayout>
