@@ -27,8 +27,8 @@
         android:layout_width="match_parent"
         android:layout_alignBottom="@id/stationsListView"
         android:layout_alignEnd="@id/stationsListView"
-        android:textOff="Prochains matchs"
-        android:textOn="Matchs terminés"
+        android:textOff="VOIR RÉSULTATS"
+        android:textOn="VOIR MATCHS"
         android:background="#ffffff"/>
 
 

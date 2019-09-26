@@ -3,7 +3,6 @@ package com.bitbuildr.bicloo
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ArrayAdapter
-import android.widget.ListView
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.*
 import org.json.JSONArray
@@ -21,6 +20,7 @@ class OkHttpRequest(client: OkHttpClient) { // Small class to use okHttp quicker
 
     fun GET(url: String, callback: Callback): Call {
         val request = Request.Builder()
+            .header("X-Auth-Token", "d7927f1e4cd0415ba278af835989341c")
             .url(url)
             .build()
 
@@ -47,18 +47,22 @@ class MainActivity : AppCompatActivity() {
     enum class DisplayMode { NAMES, STANDS }
 
     // Delegate usage, we observe changes to mode
-    var mode: DisplayMode by Delegates.observable(DisplayMode.NAMES) { property, old, new ->
+    var mode: DisplayMode by Delegates.observable(DisplayMode.NAMES) { _, _, _ ->
         refreshDisplay()
     }
 
     // Delegate usage, we observe changes to stations
-    var stations: List<Station> by Delegates.observable(emptyList()) { property, old, new ->
+    var matchesScheduled: List<Matche> by Delegates.observable(emptyList()) { _, _, _ ->
+        refreshDisplay()
+    }
+
+    // Delegate usage, we observe changes to stations
+    var matchesFinished: List<Matche> by Delegates.observable(emptyList()) { _, _, _ ->
         refreshDisplay()
     }
 
     // build http client
     private val client = OkHttpClient()
-    private val url = "https://api.jcdecaux.com/vls/v1/stations?contract=nantes&apiKey=cb6b72d2aca14d4c46b60bcd5d69e2c342b00a76"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,35 +73,40 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Send our request
-        refreshData()
+        //refreshData("https://api.football-data.org/v2/competitions/CL/matches?status=SCHEDULED")
+        refreshData("https://api.football-data.org/v2/competitions/CL/matches?status=FINISHED")
     }
 
-    private fun refreshData() {
+    private fun refreshData(url : String) {
         OkHttpRequest(client).GET(url, object: Callback {
             override fun onResponse(call: Call?, response: Response) {
                 val responseData = response.body()?.string()
                 runOnUiThread { // Important, we want to refresh our data on main thread (crash otherwise)
                     try {
-                        val json = JSONArray(responseData)
-                        println("Request Successful!!")
+                        println("Request 1Successful!!")
+                        val jsonO = JSONObject(responseData)
+                        println(jsonO)
+                        val json = jsonO.getJSONArray("matches")
+                        println("Request 2Successful!!")
                         println(json)
 
                         // mapping from json to list of Stations
-                        val stations = json.toJSONObjectList().map {
-                            Station(
-                                it.getInt("number"),
-                                it.getString("name"),
-                                Station.StandsCount(
-                                    it.getInt("available_bike_stands"),
-                                    it.getInt("available_bikes"),
-                                    it.getInt("bike_stands")
-                                )
+                        val matches = json.toJSONObjectList().map {
+                            Matche(
+                                it.getInt("id"),
+                                it.getString("utcDate"),
+                                it.getJSONObject("score").optString("winner"),
+                                it.getJSONObject("score").getJSONObject("fullTime").getInt("homeTeam"),
+                                it.getJSONObject("score").getJSONObject("fullTime").getInt("awayTeam"),
+                                it.getJSONObject("homeTeam").getString("name"),
+                                it.getJSONObject("awayTeam").getString("name")
                             )
                         }
-                        println(stations)
+                        println(matches)
 
-                        this@MainActivity.stations = stations
+                        this@MainActivity.matchesFinished = matches
                     } catch (e: JSONException) {
+                        println("Request 2Failure.")
                         e.printStackTrace()
                     }
                 }
@@ -111,10 +120,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun refreshDisplay() {
         // Complexe usage of map and when combined to show that kotlin is fucking awesome
-        val cellContentTexts = stations.map {
+        val cellContentTexts = matchesFinished.map {
             when(mode) {
-                DisplayMode.NAMES -> it.name
-                DisplayMode.STANDS -> "${it.stands.free} / ${it.stands.total}" // parameters in strings
+                DisplayMode.NAMES -> "${it.homeTeam} vs ${it.awayTeam}"
+                DisplayMode.STANDS -> "${it.scoreHomeTeam} vs ${it.scoreAwayTeam}" // parameters in strings
             }
         }
 
